@@ -1,0 +1,20 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Output and data files
+data/
+*.csv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Credentials
+credentials.py
+.env
+
+# IDE / Editor configs
+.vscode/
+*.swp
