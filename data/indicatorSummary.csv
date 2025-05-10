@@ -1,6 +1,6 @@
-Timeframe,Top_ETFs,Bottom_ETFs,RSI_Top,RSI_Bottom
+Timeframe,CMF_Top,CMF_Bottom,RSI_Top,RSI_Bottom
 5M,"['XLK', 'EFA', 'XLU', 'XLE', 'XLB', 'XLRE', 'SMH', 'XLI']","['XLC', 'VOO', 'XLV', 'IVV', 'ARKK', 'XLP', 'PBW', 'FXI']","['XLU', 'TAN', 'EFA', 'XLI', 'XLB', 'PBW', 'SMH', 'XLK']","['XLV', 'XLP', 'XLC', 'FXI', 'HYG', 'XLRE', 'DIA', 'VOO']"
 1H,"['TAN', 'SMH', 'XLI', 'XLU', 'XLE', 'ARKK', 'XLB', 'IWM']","['EFA', 'FXI', 'EEM', 'PBW', 'XLC', 'HYG', 'XLY', 'XLV']","['TAN', 'PBW', 'SMH', 'XLE', 'XLI', 'XLY', 'IWM', 'XLK']","['XLV', 'XLP', 'TLT', 'XLC', 'XLU', 'HYG', 'XLRE', 'FXI']"
 1D,"['PBW', 'IWM', 'TAN', 'XLU', 'SMH', 'QQQ', 'ARKK', 'IVV']","['FXI', 'EEM', 'XLV', 'XLF', 'TLT', 'XLE', 'XLC', 'DIA']","['XLI', 'EFA', 'PBW', 'TAN', 'EEM', 'XLK', 'SMH', 'XLF']","['XLV', 'TLT', 'XLE', 'XLP', 'HYG', 'DIA', 'FXI', 'XLB']"
-1W,"['XLU', 'EFA', 'PBW', 'EEM', 'FXI', 'XLF', 'XLRE', 'XLK']","['TLT', 'XLV', 'XLY', 'XLP', 'HYG', 'XLB', 'XLE', 'IWM']","['EFA', 'FXI', 'XLU', 'EEM', 'XLF', 'XLI', 'XLC', 'XLP']","['XLV', 'XLE', 'TLT', 'IWM', 'TAN', 'PBW', 'XLB', 'DIA']"
-1M,"['XLU', 'XLF', 'HYG', 'XLP', 'SPY', 'XLI', 'EFA', 'VTI']","['FXI', 'TAN', 'PBW', 'ARKK', 'XLE', 'TLT', 'EEM', 'SMH']","['XLC', 'XLF', 'EFA', 'QQQ', 'XLI', 'XLU', 'FXI', 'IVV']","['PBW', 'TAN', 'TLT', 'XLV', 'XLE', 'XLB', 'IWM', 'ARKK']"
+1WK,"['XLU', 'EFA', 'PBW', 'EEM', 'FXI', 'XLF', 'XLRE', 'XLK']","['TLT', 'XLV', 'XLY', 'XLP', 'HYG', 'XLB', 'XLE', 'IWM']","['EFA', 'FXI', 'XLU', 'EEM', 'XLF', 'XLI', 'XLC', 'XLP']","['XLV', 'XLE', 'TLT', 'IWM', 'TAN', 'PBW', 'XLB', 'DIA']"
+1MO,"['XLU', 'XLF', 'HYG', 'XLP', 'SPY', 'XLI', 'EFA', 'VTI']","['FXI', 'TAN', 'PBW', 'ARKK', 'XLE', 'TLT', 'EEM', 'SMH']","['XLC', 'XLF', 'EFA', 'QQQ', 'XLI', 'XLU', 'FXI', 'IVV']","['PBW', 'TAN', 'TLT', 'XLV', 'XLE', 'XLB', 'IWM', 'ARKK']"

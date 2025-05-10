@@ -25,3 +25,51 @@ INTERVAL_PERIOD_MAP = {
     "1wk": "10y",
     "1mo": "20y"
 }
+
+
+# === Indicator Registry ===
+INDICATOR_REGISTRY = {
+    "CMF": {
+        "func": "ta.cmf",
+        "columns": ["High", "Low", "Close", "Volume"],
+        "params": {"length": 20}
+    },
+    "RSI": {
+        "func": "ta.rsi",
+        "columns": ["Close"],
+        "params": {"length": 14}
+    },
+    "MACD": {
+        "func": "ta.macd",
+        "columns": ["Close"],
+        "params": {}  # default fast=12, slow=26, signal=9
+    },
+    "BBANDS": {
+        "func": "ta.bbands",
+        "columns": ["Close"],
+        "params": {"length": 20, "std": 2}
+    },
+    "EMA_21": {
+        "func": "ta.ema",
+        "columns": ["Close"],
+        "params": {"length": 21}
+    },
+    "EMA_50": {
+        "func": "ta.ema",
+        "columns": ["Close"],
+        "params": {"length": 50}
+    },
+    "ROC": {
+        "func": "ta.roc",
+        "columns": ["Close"],
+        "params": {"length": 10}
+    },
+    "OBV": {
+        "func": "ta.obv",
+        "columns": ["Close", "Volume"],
+        "params": {}
+    }
+}
+
+# === Summary Output Indicators ===
+SUMMARY_INDICATORS = ["CMF", "RSI"]

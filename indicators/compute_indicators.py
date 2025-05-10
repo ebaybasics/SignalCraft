@@ -1,21 +1,51 @@
-# indicators/compute_indicators.py
+# === compute_indicators.py ===
 
 import pandas as pd
 import pandas_ta as ta
-from config import DEFAULT_CMF_LENGTH, DEFAULT_RSI_LENGTH, INTERVAL_PERIOD_MAP
+import yfinance as yf
+from config import INTERVAL_PERIOD_MAP, INDICATOR_REGISTRY
 
-def compute_indicators(df: pd.DataFrame, interval: str, cmf_len: int = DEFAULT_CMF_LENGTH, rsi_len: int = DEFAULT_RSI_LENGTH) -> pd.DataFrame:
-    cmf_col = f"CMF_{interval.upper()}"
-    rsi_col = f"RSI_{interval.upper()}"
-    df[cmf_col] = ta.cmf(df['High'], df['Low'], df['Close'], df['Volume'], length=cmf_len)
-    df[rsi_col] = ta.rsi(df['Close'], length=rsi_len)
-    return df[[cmf_col, rsi_col]]
+# === Compute Technical Indicators ===
+def compute_indicators(df: pd.DataFrame, interval: str) -> pd.DataFrame:
+    label = interval.upper()
+    result_cols = []
 
+    for name, meta in INDICATOR_REGISTRY.items():
+        
+        func_path = meta["func"]
+        cols_needed = meta["columns"]
+        params = meta["params"]
+
+        if not all(col in df.columns for col in cols_needed):
+            print(f"Skipping {name} — missing required columns.")
+            continue
+
+        try:
+            func = eval(func_path)
+            args = [df[col] for col in cols_needed]
+            result = func(*args, **params)
+
+            if isinstance(result, pd.Series):
+                col_name = f"{name}_{label}"
+                df[col_name] = result
+                result_cols.append(col_name)
+
+            elif isinstance(result, pd.DataFrame):
+                for col in result.columns:
+                    new_col = f"{col}_{label}" if not col.endswith(f"_{label}") else col
+                    df[new_col] = result[col]
+                    result_cols.append(new_col)
+
+        except Exception as e:
+            print(f"Error computing {name}: {e}")
+            continue
+
+    return df[result_cols]
+
+# === Build Snapshot Across Tickers ===
 def build_snapshot_with_indicators(tickers: list[str], interval: str) -> pd.DataFrame:
-    import yfinance as yf  # local import to avoid circular issues
     period = INTERVAL_PERIOD_MAP.get(interval, "60d")
-    cmf_label = f"CMF_{interval.upper()}"
-    rsi_label = f"RSI_{interval.upper()}"
+    label = interval.upper()
     results = []
 
     for ticker in tickers:
@@ -27,12 +57,18 @@ def build_snapshot_with_indicators(tickers: list[str], interval: str) -> pd.Data
                 continue
 
             df = compute_indicators(df, interval)
-            cmf = df[cmf_label].dropna().iloc[-1] if not df[cmf_label].dropna().empty else None
-            rsi = df[rsi_label].dropna().iloc[-1] if not df[rsi_label].dropna().empty else None
-            results.append({"Ticker": ticker, cmf_label: cmf, rsi_label: rsi})
+
+            result = {"Ticker": ticker}
+            for col in df.columns:
+                if not df[col].dropna().empty:
+                    result[col] = df[col].dropna().iloc[-1]
+                else:
+                    result[col] = None
+
+            results.append(result)
 
         except Exception as e:
             print(f"{ticker} error: {e}")
-            results.append({"Ticker": ticker, cmf_label: None, rsi_label: None})
+            results.append({"Ticker": ticker})
 
     return pd.DataFrame(results)
