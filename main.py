@@ -2,8 +2,9 @@
 
 import pandas as pd
 import os
-from config import tickers
+from config import tickers, SR_tickers
 from indicators.compute_indicators import build_snapshot_with_indicators
+from indicators.fetch_data import fetch_ticker_data
 from analysis.summary import summarize_top_bottom_indicators
 
 # === Create Output Directory ===
@@ -16,12 +17,14 @@ snapshots = {
     "1H": build_snapshot_with_indicators(tickers, "1h"),
     "1D": build_snapshot_with_indicators(tickers, "1d"),
     "1WK": build_snapshot_with_indicators(tickers, "1wk"),
-    "1MO": build_snapshot_with_indicators(tickers, "1mo")
+    "1MO": build_snapshot_with_indicators(tickers, "1mo"),
+    "3MO": build_snapshot_with_indicators(tickers, "3mo")
+
 }
 
 # === Summary Output ===
 print("🧠 Summarizing top and bottom ETFs by active indicators...")
-summary_df = summarize_top_bottom_indicators(snapshots, top_n=8)
+summary_df = summarize_top_bottom_indicators(snapshots)
 
 # === Save Outputs ===
 
@@ -39,3 +42,24 @@ summary_df.to_csv("data/indicatorSummary.csv", index=False)
 
 print("✅ Saved full market data to data/marketData.csv")
 print("✅ Saved summary rankings to data/indicatorSummary.csv")
+
+from indicators.fetch_data import generate_ohlcv_snapshots
+import os
+
+# === Save Ticker OHLCV Snapshots ===
+os.makedirs("data/priceVolume", exist_ok=True)
+
+timeframes = ["5m", "1h", "1d", "1wk", "1mo", "3mo"]
+
+for ticker in SR_tickers:
+    for tf in timeframes:
+        try:
+            df = fetch_ticker_data(ticker, interval=tf, years=1)
+            if not df.empty:
+                filepath = f"data/priceVolume/{ticker}_{tf.upper()}.csv"
+                df.to_csv(filepath)
+                print(f"✅ Saved: {filepath}")
+            else:
+                print(f"⚠️ No data for {ticker} {tf}")
+        except Exception as e:
+            print(f"❌ Error fetching {ticker} {tf}: {e}")

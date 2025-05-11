@@ -6,9 +6,9 @@ This is the running checklist for building modularity, scalability, and flexibil
 
 ## 🔁 Indicators
 
-- [ ] Create an indicator registry in `config.py`
+- [x ] Create an indicator registry in `config.py`
   - Format should include: name, function path, required columns, parameters
-- [ ] Refactor `compute_indicators()` to loop through registry
+- [ x] Refactor `compute_indicators()` to loop through registry
   - Dynamically compute only enabled indicators
   - Automatically build result columns list
 
@@ -16,9 +16,9 @@ This is the running checklist for building modularity, scalability, and flexibil
 
 ## 📊 Summary Engine
 
-- [ ] Move indicator names used in summary to `config.py`
+- [x ] Move indicator names used in summary to `config.py`
   - `SUMMARY_INDICATORS = ["CMF", "RSI", "MACD"]`
-- [ ] Refactor `summarize_top_bottom_cmf()` to loop through indicators
+- [x ] Refactor `summarize_top_bottom_cmf()` to loop through indicators
   - Use the registry to find column names
   - Avoid hardcoding “CMF_1D”, etc.
 

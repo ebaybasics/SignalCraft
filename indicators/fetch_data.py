@@ -27,3 +27,24 @@ def fetch_ticker_data(ticker: str, interval: str = "1d", years: int = 5) -> pd.D
         raise ValueError(f"No data for {ticker} at interval {interval}")
 
     return df
+
+def generate_ohlcv_snapshots(ticker: str, timeframes: list[str]) -> pd.DataFrame:
+    snapshot_rows = []
+
+    for tf in timeframes:
+        try:
+            df = fetch_ticker_data(ticker, interval=tf, years=1)
+            last_row = df.iloc[-1]  # Get most recent OHLCV
+            snapshot_rows.append({
+                "Ticker": ticker,
+                "Timeframe": tf.upper(),
+                "Open": last_row["Open"],
+                "High": last_row["High"],
+                "Low": last_row["Low"],
+                "Close": last_row["Close"],
+                "Volume": last_row["Volume"]
+            })
+        except Exception as e:
+            print(f"⚠️ {ticker} {tf}: {e}")
+
+    return pd.DataFrame(snapshot_rows)
