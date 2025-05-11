@@ -1,5 +1,3 @@
-# === analysis/summary.py ===
-
 import pandas as pd
 from config import SUMMARY_INDICATORS, SUMMARY_TOP_N, SUMMARY_INCLUDE_TOP_BOTTOM_ONLY
 
@@ -7,12 +5,26 @@ from config import SUMMARY_INDICATORS, SUMMARY_TOP_N, SUMMARY_INCLUDE_TOP_BOTTOM
 def summarize_top_bottom_indicators(
     snapshots: dict[str, pd.DataFrame]
 ) -> pd.DataFrame:
-    def extract_sorted_lists(df, col, n):
-        df_sorted = df.sort_values(by=col, ascending=False, na_position='last')
-        return (
-            df_sorted['Ticker'].head(n).tolist(),
-            df_sorted['Ticker'].tail(n).tolist()[::-1]
-        )
+    
+    def extract_sorted_dicts(df, value_col, indicator_name, n):
+        df_sorted = df.sort_values(by=value_col, ascending=False, na_position='last')
+        top = [
+            {
+                "Ticker": row["Ticker"],
+                "Indicator": indicator_name,
+                "Value": round(row[value_col], 4)
+            }
+            for _, row in df_sorted.head(n).iterrows()
+        ]
+        bottom = [
+            {
+                "Ticker": row["Ticker"],
+                "Indicator": indicator_name,
+                "Value": round(row[value_col], 4)
+            }
+            for _, row in df_sorted.tail(n).iloc[::-1].iterrows()
+        ]
+        return top, bottom
 
     summary = []
 
@@ -25,11 +37,14 @@ def summarize_top_bottom_indicators(
                 print(f"⚠️ Missing: {col_name}")
                 continue
 
-            top, bottom = extract_sorted_lists(df, col_name, SUMMARY_TOP_N)
-            snapshot_summary[f"{indicator}_Top"] = top
-            snapshot_summary[f"{indicator}_Bottom"] = bottom
+            try:
+                top, bottom = extract_sorted_dicts(df, col_name, indicator, SUMMARY_TOP_N)
+                snapshot_summary[f"{indicator}_Top"] = top
+                snapshot_summary[f"{indicator}_Bottom"] = bottom
+            except Exception as e:
+                print(f"❌ Error summarizing {indicator} on {label}: {e}")
+                continue
 
-            # === Optional: Add context like Avg/Slope for the full set ===
             if not SUMMARY_INCLUDE_TOP_BOTTOM_ONLY:
                 for suffix in ["Avg", "Slope"]:
                     context_col = f"{col_name}_{suffix}"
@@ -41,4 +56,3 @@ def summarize_top_bottom_indicators(
         summary.append(snapshot_summary)
 
     return pd.DataFrame(summary)
-

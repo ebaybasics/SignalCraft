@@ -31,7 +31,24 @@ def compute_indicators(df: pd.DataFrame, interval: str) -> pd.DataFrame:
             continue
 
         try:
-            func = eval(func_path)
+            # === Special case for passthrough indicators like VOLUME ===
+            if func_path is None:
+                base_col_name = f"{name}_{label}"
+                df[base_col_name] = df[cols_needed[0]]
+                result_cols.append(base_col_name)
+
+                if with_avg:
+                    df[f"{base_col_name}_Avg"] = df[base_col_name].rolling(5).mean()
+                    result_cols.append(f"{base_col_name}_Avg")
+
+                if with_slope:
+                    df[f"{base_col_name}_Slope"] = df[base_col_name].diff()
+                    result_cols.append(f"{base_col_name}_Slope")
+
+                continue  # skip eval()
+
+            # === Normal indicator computation ===
+            func = eval(func_path)  # or use getattr(ta, func_path)
             args = [df[col] for col in cols_needed]
             result = func(*args, **params)
 
@@ -58,8 +75,17 @@ def compute_indicators(df: pd.DataFrame, interval: str) -> pd.DataFrame:
         except Exception as e:
             print(f"Error computing {name}: {e}")
             continue
+    # === Compute REL_VOLUME after VOLUME is populated ===
+    base_col_name = f"VOLUME_{label}"
+    relvol_col = f"REL_VOLUME_{label}"
+
+    if base_col_name in df.columns and f"{base_col_name}_Avg" in df.columns:
+        df[relvol_col] = df[base_col_name] / df[f"{base_col_name}_Avg"]
+        result_cols.append(relvol_col)
+    
 
     return df[result_cols]
+
 
 
 # === Build Snapshot Across Tickers ===
@@ -81,9 +107,27 @@ def build_snapshot_with_indicators(tickers: list[str], interval: str) -> pd.Data
             result = {"Ticker": ticker}
             for col in df.columns:
                 if not df[col].dropna().empty:
-                    result[col] = df[col].dropna().iloc[-1]
+                    val = df[col].dropna().iloc[-1]
+
+                    # Fully sanitize to avoid Series/dict issues
+                    if isinstance(val, (pd.Series, dict)):
+                        # Attempt to extract the first numeric value
+                        try:
+                            first_val = list(val.values())[0] if isinstance(val, dict) else val.iloc[0]
+                            result[col] = float(first_val)
+                        except Exception:
+                            result[col] = None
+                    elif hasattr(val, "item") and not isinstance(val, list):
+                        try:
+                            result[col] = val.item()
+                        except Exception:
+                            result[col] = val
+                    else:
+                        result[col] = val
                 else:
                     result[col] = None
+
+
 
             results.append(result)
 
