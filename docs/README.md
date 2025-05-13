@@ -20,11 +20,17 @@
 ```
 signalcraft/
 ├── main.py                     # Main runner script
-├── config.py                   # Settings and constants
+├── config.py                   # Settings and registry definitions
 ├── data/                       # Output files (CSV)
-├── indicators/                 # Indicator logic (fetch + compute)
-├── analysis/                   # Summary and ranking logic
-├── docs/                       # Documentation and usage guides
+├── indicators/                 # Core market logic
+│   ├── compute_indicators.py           # Pure TA indicator computation (pandas_ta)
+│   ├── compute_passthroughs.py         # Handles VOLUME, REL_VOLUME, and raw source signals
+│   ├── enhance_indicators.py           # Applies z-score, trend, smoothing, etc.
+│   ├── post_indicator_proccessing_functions.py  # Raw enhancement function definitions
+│   ├── fetch_data.py                   # OHLCV data downloading
+├── analysis/                  # Summary and ranking logic
+│   └── summary.py
+├── docs/                      # Documentation and usage guides
 │   ├── ADDING_INDICATORS.md
 │   └── RUNNING_SIGNALCRAFT.md
 ```
@@ -33,11 +39,59 @@ signalcraft/
 
 ## 🚀 Getting Started
 
-See [RUNNING_SIGNALCRAFT.md](docs/RUNNING_SIGNALCRAFT.md) for full instructions.
+To set up SignalCraft with the correct Python version and all required packages, use the included `bootstrap.sh` script.
 
-1. Install dependencies:
+### 📦 Install Prerequisites (Once)
+
+> Make sure the following are installed on your system:
+
 ```bash
-pip install yfinance pandas pandas_ta matplotlib
+sudo pacman -S --needed git base-devel openssl zlib xz tk readline libffi
+```
+
+Then install [`pyenv`](https://github.com/pyenv/pyenv):
+
+```bash
+curl https://pyenv.run | bash
+```
+
+Add this to your shell config (`~/.bashrc`, `~/.zshrc`, etc.):
+
+```bash
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+```
+
+Apply it:
+
+```bash
+exec "$SHELL"
+```
+
+---
+
+### 🚀 Bootstrap the Project
+
+```bash
+./bootstrap.sh
+```
+
+This will:
+
+- Install Python 3.11.9 (if needed)
+- Create a `.venv/`
+- Install `numpy==1.24.4`, `scipy`, `yfinance`, `pandas_ta`, and dependencies
+- Pin everything in `requirements.txt`
+
+---
+
+### 🧪 Run the System
+
+1. Activate the environment:
+```bash
+source .venv/bin/activate
 ```
 
 2. Run the script:
@@ -45,7 +99,9 @@ pip install yfinance pandas pandas_ta matplotlib
 python main.py
 ```
 
-3. Output: `data/marketData.csv` containing snapshot of ETF flows
+3. Outputs:
+- `data/marketData/*.csv` — indicator snapshots
+- `data/indicatorSummary.csv` — top/bottom ETFs by indicator
 
 ---
 

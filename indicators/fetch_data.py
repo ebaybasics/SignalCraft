@@ -4,17 +4,21 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 
-def fetch_ticker_data(ticker: str, interval: str = "1d", years: int = 5) -> pd.DataFrame:
-    end_date = datetime.today()
-    if interval in ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"]:
-        start_date = end_date - timedelta(days=59)
-    else:
-        start_date = end_date - timedelta(days=years * 365)
+def fetch_ticker_data(ticker: str, interval: str, period: str = "60d") -> pd.DataFrame:
+    """
+    Download historical OHLCV data for a given ticker and interval using yfinance.
 
+    Args:
+        ticker: Ticker symbol (e.g., "AAPL").
+        interval: Data interval (e.g., "1d", "1wk", "5m").
+        period: Lookback period or custom duration (e.g., "60d", "1y").
+
+    Returns:
+        A DataFrame with OHLCV data.
+    """
     df = yf.download(
         ticker,
-        start=start_date,
-        end=end_date,
+        period=period,
         interval=interval,
         auto_adjust=False,
         progress=False
@@ -28,13 +32,24 @@ def fetch_ticker_data(ticker: str, interval: str = "1d", years: int = 5) -> pd.D
 
     return df
 
+
 def generate_ohlcv_snapshots(ticker: str, timeframes: list[str]) -> pd.DataFrame:
+    """
+    Generate the most recent OHLCV row for multiple timeframes for a single ticker.
+
+    Args:
+        ticker: Ticker symbol.
+        timeframes: List of timeframes (e.g., ["1d", "1wk", "1mo"]).
+
+    Returns:
+        DataFrame of latest OHLCV data for each timeframe.
+    """
     snapshot_rows = []
 
     for tf in timeframes:
         try:
-            df = fetch_ticker_data(ticker, interval=tf, years=1)
-            last_row = df.iloc[-1]  # Get most recent OHLCV
+            df = fetch_ticker_data(ticker, interval=tf, period="1y")
+            last_row = df.iloc[-1]
             snapshot_rows.append({
                 "Ticker": ticker,
                 "Timeframe": tf.upper(),

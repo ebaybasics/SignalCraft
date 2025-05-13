@@ -1,0 +1,11 @@
+{
+  "python.pythonPath": ".venv/bin/python",
+  "python.analysis.extraPaths": [
+    "./",
+    "./indicators",
+    "./analysis"
+  ],
+  "python.linting.enabled": true,
+  "python.analysis.diagnosticMode": "workspace"
+}
+
