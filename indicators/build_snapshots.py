@@ -37,6 +37,8 @@ def build_full_snapshot(
                 # === Step 2: Fetch raw OHLCV data using the passed fetch_function ===
                 raw_df = fetch_function(ticker, interval=tf, period=period)
 
+
+
                 if raw_df.empty or len(raw_df) < 20:
                     print(f"⚠️ Skipping {ticker} {label} — not enough data")
                     continue
@@ -45,14 +47,21 @@ def build_full_snapshot(
                 indicators_df = compute_indicators(raw_df.copy(), tf)
                 passthrough_df = compute_passthroughs(raw_df.copy(), tf)
 
-                # === Step 4: Combine both layers, tag ticker, and extract final row ===
+                # === Step 4: Combine both layers, tag metadata, and extract last row ===
                 full_df = pd.concat([indicators_df, passthrough_df], axis=1)
-                full_df["Ticker"] = ticker
-                snapshot_rows.append(full_df.iloc[[-1]])
+                final_row = full_df.iloc[[-1]].copy()
+                final_row["Ticker"] = ticker
+                final_row["Timeframe"] = label
+
+                # Reorder columns to place Ticker and Timeframe first
+                cols = ["Ticker", "Timeframe"] + [col for col in final_row.columns if col not in ("Ticker", "Timeframe")]
+                final_row = final_row[cols]
+
+                snapshot_rows.append(final_row)
 
             except Exception as e:
                 print(f"❌ {ticker} ({label}) error: {e}")
-                snapshot_rows.append(pd.DataFrame([{"Ticker": ticker}]))
+                snapshot_rows.append(pd.DataFrame([{"Ticker": ticker, "Timeframe": label}]))
 
         # === Step 5: Save combined snapshot per timeframe ===
         if snapshot_rows:

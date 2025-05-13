@@ -1,5 +1,8 @@
 # config.py
 
+
+
+
 # === ETF Ticker List ===
 tickers = [
     "SPY", "QQQ", "DIA", "IWM", "VTI", "VOO", "IVV",
@@ -8,21 +11,12 @@ tickers = [
     "SIL", "GDX", "GLD", "VXX"
 ]
 
-#=== Individual Ticker List ===
+# #=== Individual Ticker List ===
 # tickers = [
 #     "ENPH",   # Enphase Energy
 #     "SEDG",   # SolarEdge Technologies
 #     "FSLR",   # First Solar
-#     "SPWR",   # SunPower Corporation
-#     "RUN",    # Sunrun Inc.
-#     "CSIQ",   # Canadian Solar
-#     "SHLS",   # Shoals Technologies
-#     "JKS",    # JinkoSolar
-#     "DQ",     # Daqo New Energy
-#     "MAXN",   # Maxeon Solar Technologies
-#     "ARRY",   # Array Technologies
-#     "NOVAR",  # NovaSource Power Services (if applicable)
-#     "TAN"     # Invesco Solar ETF (good proxy for the whole group)
+
 # ]
 
 

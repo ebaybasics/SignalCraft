@@ -2,8 +2,7 @@
 
 import pandas as pd
 import os
-from config import tickers, SR_tickers
-# from indicators.compute_indicators import build_snapshot_with_indicators
+from config import tickers as tickers, SR_tickers
 from indicators.fetch_data import fetch_ticker_data
 from indicators.post_indicator_proccessing_functions import *
 from analysis.summary import summarize_top_bottom_indicators
@@ -11,10 +10,21 @@ from indicators.enhance_indicators import apply_derived_features
 from indicators.compute_passthroughs import compute_passthroughs
 from indicators.build_snapshots import build_full_snapshot
 
+from stockrover.extract_tickers import extract_tickers_from_pdf as extract_tickers  # Function to extract from PDF
 
 # === Create Output Directory ===
 os.makedirs("data", exist_ok=True)
 
+# === Check for Stock Rover PDF Override ***MAKE SURE TO DELETE FILE WHEN DONE***===
+stockrover_pdf_dir = "stockrover/stockrover_downloads"
+pdf_override_file = os.path.join(stockrover_pdf_dir, "Stock Rover Table.pdf")
+
+if os.path.exists(pdf_override_file):
+    print(f"[INFO] Using tickers extracted from: {pdf_override_file}")
+    tickers = extract_tickers(pdf_override_file)
+else:
+    print("[INFO] No Stock Rover override found. Using default tickers from config.")
+    #tickers = default_tickers
 
 # === Flexible Snapshot Builder ===
 # The following line generates snapshots for each timeframe by computing both technical indicators
