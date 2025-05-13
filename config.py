@@ -4,17 +4,25 @@
 tickers = [
     "SPY", "QQQ", "DIA", "IWM", "VTI", "VOO", "IVV",
     "XLK", "XLF", "XLY", "XLP", "XLV", "XLE", "XLI", "XLRE", "XLU", "XLB", "XLC",
-    "ARKK", "SMH", "TAN", "PBW", "FXI", "EEM", "EFA", "TLT", "HYG"
+    "ARKK", "SMH", "TAN", "PBW", "FXI", "EEM", "EFA", "TLT", "HYG", "UUP", "SLV",
+    "SIL", "GDX", "GLD", "VXX"
 ]
 
-# === Individual Ticker List ===
+#=== Individual Ticker List ===
 # tickers = [
-#     "ACLS", "ACMR", "ADI", "ALAB", "ALGM", "AMAT", "AMBA", "AMD", "AMKR", "ARM",
-#     "ASML", "ASX", "AVGO", "CAMT", "CRDO", "CRUS", "DIOD", "ENTG", "FORM", "GFS",
-#     "HIMX", "INTC", "IPGP", "KLAC", "KLIC", "LRCX", "LSCC", "MCHP", "MPWR", "MRVL",
-#     "MTSI", "MU", "NVDA", "NVMI", "NXPI", "ON", "ONTO", "PI", "PLAB", "POWI", "QCOM",
-#     "QRVO", "RMBS", "SIMO", "SITM", "SLAB", "SMTC", "STM", "SWKS", "SYNA", "TER",
-#     "TSEM", "TSM", "TXN", "UMC", "VECO", "VSH"
+#     "ENPH",   # Enphase Energy
+#     "SEDG",   # SolarEdge Technologies
+#     "FSLR",   # First Solar
+#     "SPWR",   # SunPower Corporation
+#     "RUN",    # Sunrun Inc.
+#     "CSIQ",   # Canadian Solar
+#     "SHLS",   # Shoals Technologies
+#     "JKS",    # JinkoSolar
+#     "DQ",     # Daqo New Energy
+#     "MAXN",   # Maxeon Solar Technologies
+#     "ARRY",   # Array Technologies
+#     "NOVAR",  # NovaSource Power Services (if applicable)
+#     "TAN"     # Invesco Solar ETF (good proxy for the whole group)
 # ]
 
 
@@ -61,5 +69,5 @@ INDICATOR_REGISTRY = {
 
 # === Summary Output Indicators ===
 SUMMARY_INDICATORS = ["CMF", "RSI", "REL_VOLUME"]
-SUMMARY_TOP_N = 8
+SUMMARY_TOP_N = 3
 SUMMARY_INCLUDE_TOP_BOTTOM_ONLY = True
