@@ -7,11 +7,12 @@
 ## 🔍 Features
 
 - Fetch and analyze ETF data across multiple timeframes
-- Compute key indicators like CMF and RSI (more coming: MACD, BBANDS, etc.)
+- Compute key indicators like CMF, RSI, MACD, OBV — and passthroughs like Volume and Relative Volume
 - Modular structure: easily extend with your own logic
 - Summarize top/bottom ETFs by money flow and momentum
 - Fully configurable via `config.py`
 - Clean output saved as `marketData.csv` for use in GPT prompts or dashboards
+- Plug-and-play data layer: swap out yFinance with another API easily
 
 ---
 
@@ -19,18 +20,19 @@
 
 ```
 signalcraft/
-├── main.py                     # Main runner script
-├── config.py                   # Settings and registry definitions
-├── data/                       # Output files (CSV)
-├── indicators/                 # Core market logic
-│   ├── compute_indicators.py           # Pure TA indicator computation (pandas_ta)
-│   ├── compute_passthroughs.py         # Handles VOLUME, REL_VOLUME, and raw source signals
-│   ├── enhance_indicators.py           # Applies z-score, trend, smoothing, etc.
+├── main.py                          # Main runner script
+├── config.py                        # Settings and registry definitions
+├── build_snapshots.py              # Unified snapshot builder using plug-and-play fetch logic
+├── data/                            # Output files (CSV)
+├── indicators/                      # Core market logic
+│   ├── compute_indicators.py               # Pure TA indicator computation (pandas_ta)
+│   ├── compute_passthroughs.py             # Handles VOLUME, REL_VOLUME, and raw source signals
+│   ├── enhance_indicators.py               # Applies z-score, trend, smoothing, etc.
 │   ├── post_indicator_proccessing_functions.py  # Raw enhancement function definitions
-│   ├── fetch_data.py                   # OHLCV data downloading
-├── analysis/                  # Summary and ranking logic
+│   ├── fetch_data.py                       # OHLCV data downloading (yFinance by default)
+├── analysis/                      # Summary and ranking logic
 │   └── summary.py
-├── docs/                      # Documentation and usage guides
+├── docs/                          # Documentation and usage guides
 │   ├── ADDING_INDICATORS.md
 │   └── RUNNING_SIGNALCRAFT.md
 ```
@@ -102,6 +104,14 @@ python main.py
 3. Outputs:
 - `data/marketData/*.csv` — indicator snapshots
 - `data/indicatorSummary.csv` — top/bottom ETFs by indicator
+
+---
+
+## 🔄 Swappable Data Sources
+
+The snapshot builder in `build_snapshots.py` accepts a custom `fetch_function`.  
+This allows you to replace `yfinance` with any API or internal source — no need to modify your core analysis logic.  
+The default fetch function is defined in `indicators/fetch_data.py`.
 
 ---
 

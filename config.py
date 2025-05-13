@@ -98,7 +98,7 @@ INDICATOR_REGISTRY = {
 INDICATOR_ENHANCERS = {
     "OBV": ["z_score", "true_trend", "signal_noise", "slope_diff", "smooth_series", "velocity_rank"],
     "CMF": ["z_score", "true_trend"],
-    "RSI": ["slope_diff", "signal_noise"],
+    "RSI": ["slope_diff", "signal_noise", "z_score"],
     # Add more as needed
 }
 
@@ -117,6 +117,6 @@ PASSTHROUGH_REGISTRY = {
 
 
 # === Summary Output Indicators ===
-SUMMARY_INDICATORS = ["CMF", "RSI"]
+SUMMARY_INDICATORS = ["CMF", "RSI", "REL_VOLUME", "RSI_Z", "CMF_Z", "RSI_Noise", "OBV_Z"]
 SUMMARY_TOP_N = 3
 SUMMARY_INCLUDE_TOP_BOTTOM_ONLY = True
