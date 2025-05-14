@@ -1,27 +1,19 @@
-# indicators/fetch_data.py
-
 import yfinance as yf
 import pandas as pd
-from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Dict
+import threading
+
 
 def fetch_ticker_data(ticker: str, interval: str, period: str = "60d") -> pd.DataFrame:
-    """
-    Download historical OHLCV data for a given ticker and interval using yfinance.
 
-    Args:
-        ticker: Ticker symbol (e.g., "AAPL").
-        interval: Data interval (e.g., "1d", "1wk", "5m").
-        period: Lookback period or custom duration (e.g., "60d", "1y").
-
-    Returns:
-        A DataFrame with OHLCV data.
-    """
     df = yf.download(
         ticker,
         period=period,
         interval=interval,
         auto_adjust=False,
-        progress=False
+        progress=False,
+        threads=False  # Important when using multithreading outside yfinance
     )
 
     if isinstance(df.columns, pd.MultiIndex):
@@ -31,6 +23,39 @@ def fetch_ticker_data(ticker: str, interval: str, period: str = "60d") -> pd.Dat
         raise ValueError(f"No data for {ticker} at interval {interval}")
 
     return df
+
+
+def fetch_multiple_tickers(
+    tickers: List[str],
+    interval: str,
+    period: str = "60d",
+    max_workers: int = 5
+) -> Dict[str, pd.DataFrame]:
+    """
+    Fetch OHLCV data for multiple tickers concurrently using up to 5 threads.
+
+    Returns:
+        A dictionary of {ticker: DataFrame}
+    """
+    results = {}
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_ticker = {
+            executor.submit(fetch_ticker_data, ticker, interval, period): ticker
+            for ticker in tickers
+        }
+
+        for future in as_completed(future_to_ticker):
+            ticker = future_to_ticker[future]
+            try:
+                df = future.result()
+                results[ticker] = df
+                print(f"✅ {ticker} fetched")
+            except Exception as e:
+                print(f"❌ {ticker} failed: {e}")
+
+    return results
+
 
 
 def generate_ohlcv_snapshots(ticker: str, timeframes: list[str]) -> pd.DataFrame:
