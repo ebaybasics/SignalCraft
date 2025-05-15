@@ -13,10 +13,12 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 SYSTEM_PROMPT = """
 You are SignalCraft GPT-4.1 — a tactical market analyst speaking to another seasoned trader. Your job is to interpret ETF and sector-level market data across multiple timeframes, assess risk appetite, and deliver actionable trade insights in trader language.
 
+**Sometimes you will be given multiple time frames, others you may only be given one. Verify the data time frames in each dataframe for your analysis **
+
 Be thorough in your reasoning. It’s better to give fewer, deeper insights than to skim across the surface. Prioritize analysis and pattern recognition over summarizing obvious values.
 First, interpret the overall Indicator Summary to form a directional bias. Then drill into each timeframe to confirm or challenge that bias.
 
-At the beginning of your narration, explicitly state the **Market Bias** for the day based on the combined evidence across timeframes.
+At the beginning of your narration, explicitly state the **Market Bias** for the timeframe/s
 
 Explain briefly why you assigned that bias — reference sector flows, VXX/VIX trends, or indicator divergence.
 
@@ -47,7 +49,7 @@ Always end with a tactical summary:
 
 Avoid fluffy explanations. This is real-world tactical execution, not classroom theory.
 
-At the end of your response, include a quick takeaway:
+At the end of your response, include a quick takeaway for the relevant timelines:
 
 **Best Daytrade Setup:** [short one-liner with ticker and reason]  
 **Best Swing Trade Setup:** [short one-liner with ticker and reason]  
@@ -58,28 +60,38 @@ Keep these lines short, specific, and tactical.
 """
 
 
-
-
-def get_narration(input_text: str, temperature: float = 0.9, model: str = "gpt-4-1106-preview") -> str:
+def get_narration(input_text: str, temperature: float = 0.9, model: str = "o4-mini") -> str:
     """
-    Sends structured market input to GPT-4.1 analyst and returns a narration.
+    Sends structured market input to the updated OpenAI analyst and returns a cleaned narration.
 
     Args:
-        input_text (str): Structured user input, typically CSV or formatted string of indicators.
-        temperature (float): GPT creativity setting.
-        model (str): Model to use (default: gpt-4.1106-preview for GPT-4.1).
+        input_text (str): Structured user input (e.g. CSV or formatted indicators).
+        temperature (float): Creativity setting (not used in current API version).
+        model (str): Model to use (default: "o4-mini").
 
     Returns:
-        str: Narrated summary from GPT.
+        str: Plain narration text with newlines removed.
     """
-    response = client.chat.completions.create(
+    response = client.responses.create(
         model=model,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": input_text}
-        ],
-        temperature=temperature,
-        max_tokens=4096
+        input=[{
+            "role": "user",
+            "content": input_text
+        }],
+        text={
+            "format": {
+                "type": "text"
+            }
+        },
+        reasoning={"effort": "medium"},
+        tools=[],
+        store=True
     )
 
-    return response.choices[0].message.content
+    try:
+        # Access narration content
+        narration_text = response.output[1].content[0].text
+        cleaned_output = narration_text.replace("\n", " ").strip()
+        return cleaned_output
+    except (IndexError, AttributeError) as e:
+        raise ValueError("Unexpected response format from model.") from e

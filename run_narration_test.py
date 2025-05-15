@@ -7,19 +7,19 @@ from chatgpt.client import get_narration
 # === Load and combine market snapshot data ===
 def load_market_data():
     df_5m = pd.read_csv("data/marketData/marketData_5M.csv")
-    df_1h = pd.read_csv("data/marketData/marketData_1H.csv")
-    df_1d = pd.read_csv("data/marketData/marketData_1D.csv")
-    df_1wk = pd.read_csv("data/marketData/marketData_1WK.csv")
-    df_1mo = pd.read_csv("data/marketData/marketData_1MO.csv")
+    # df_1h = pd.read_csv("data/marketData/marketData_1H.csv")
+    # df_1d = pd.read_csv("data/marketData/marketData_1D.csv")
+    # df_1wk = pd.read_csv("data/marketData/marketData_1WK.csv")
+    # df_1mo = pd.read_csv("data/marketData/marketData_1MO.csv")
     df_summary = pd.read_csv("data/indicatorSummary.csv")
     
     return {
         "Indicator Summary": df_summary,
         "5M": df_5m,
-        "1H": df_1h,
-        "1D": df_1d,
-        "1WK": df_1wk,
-        "1MO": df_1mo
+        # "1H": df_1h,
+        # "1D": df_1d,
+        # "1WK": df_1wk,
+        # "1MO": df_1mo
     }
 
 
