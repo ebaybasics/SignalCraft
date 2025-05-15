@@ -69,11 +69,9 @@ INTERVAL_PERIOD_MAP = {
 INDICATOR_REGISTRY = {
     "CMF": {"func": "ta.cmf", "columns": ["High", "Low", "Close", "Volume"], "params": {"length": 20}, "with_avg": True, "with_slope": True},
     "RSI": {"func": "ta.rsi", "columns": ["Close"], "params": {"length": 14}, "with_avg": True, "with_slope": True},
-    "ROC": {"func": "ta.roc", "columns": ["Close"], "params": {"length": 10}},
     "MACD": {"func": "ta.macd", "columns": ["Close"], "params": {}},
     "EMA_50": {"func": "ta.ema", "columns": ["Close"], "params": {"length": 50}},
     "BBANDS": {"func": "ta.bbands", "columns": ["Close"], "params": {"length": 20, "std": 2}},
-    "ADX": {"func": "ta.adx", "columns": ["High", "Low", "Close"], "params": {"length": 14}},
     "OBV": {"func": "ta.obv", "columns": ["Close", "Volume"], "params": {}, "with_avg": True, "with_slope": True}
 }
 
