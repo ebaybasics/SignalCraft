@@ -12,9 +12,7 @@ from indicators.build_snapshots import build_full_snapshot
 
 from stockrover.extract_tickers import extract_tickers_from_pdf as extract_tickers  # Function to extract from PDF
 
-from config.credentials import OPENAI_API_KEY as key
 
-print(key)
 
 # === Create Output Directory ===
 os.makedirs("data", exist_ok=True)
