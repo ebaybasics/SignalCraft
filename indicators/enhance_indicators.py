@@ -1,6 +1,6 @@
 # === enhance_indicators.py ===
 
-from config import INDICATOR_ENHANCERS
+from config.config import INDICATOR_ENHANCERS
 from indicators.post_indicator_proccessing_functions import (
     z_score, true_trend, signal_noise, slope_diff, smooth_series, velocity_rank
 )

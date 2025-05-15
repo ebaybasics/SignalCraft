@@ -1,7 +1,7 @@
 # === compute_passthroughs.py ===
 
 import pandas as pd
-from config import PASSTHROUGH_REGISTRY
+from config.config import PASSTHROUGH_REGISTRY
 
 def compute_passthroughs(df: pd.DataFrame, interval: str) -> pd.DataFrame:
     """

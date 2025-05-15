@@ -2,7 +2,7 @@
 
 import pandas as pd
 import os
-from config import tickers as tickers, SR_tickers
+from config.config import tickers as tickers, SR_tickers
 from indicators.fetch_data import fetch_ticker_data
 from indicators.post_indicator_proccessing_functions import *
 from analysis.summary import summarize_top_bottom_indicators
@@ -11,6 +11,10 @@ from indicators.compute_passthroughs import compute_passthroughs
 from indicators.build_snapshots import build_full_snapshot
 
 from stockrover.extract_tickers import extract_tickers_from_pdf as extract_tickers  # Function to extract from PDF
+
+from config.credentials import OPENAI_API_KEY as key
+
+print(key)
 
 # === Create Output Directory ===
 os.makedirs("data", exist_ok=True)

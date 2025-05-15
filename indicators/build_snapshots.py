@@ -3,7 +3,7 @@
 import pandas as pd
 from indicators.compute_indicators import compute_indicators
 from indicators.compute_passthroughs import compute_passthroughs
-from config import INTERVAL_PERIOD_MAP
+from config.config import INTERVAL_PERIOD_MAP
 
 def build_full_snapshot(
     tickers: list[str],

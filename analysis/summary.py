@@ -1,5 +1,5 @@
 import pandas as pd
-from config import SUMMARY_INDICATORS, SUMMARY_TOP_N, SUMMARY_INCLUDE_TOP_BOTTOM_ONLY
+from config.config import SUMMARY_INDICATORS, SUMMARY_TOP_N, SUMMARY_INCLUDE_TOP_BOTTOM_ONLY
 
 # === Summarize Top/Bottom ETFs Dynamically by Indicator ===
 def summarize_top_bottom_indicators(

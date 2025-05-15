@@ -3,7 +3,7 @@
 import pandas as pd
 import pandas_ta as ta
 import yfinance as yf
-from config import INTERVAL_PERIOD_MAP, INDICATOR_REGISTRY
+from config.config import INTERVAL_PERIOD_MAP, INDICATOR_REGISTRY
 
 
 def compute_indicators(df: pd.DataFrame, interval: str) -> pd.DataFrame:
