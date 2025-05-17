@@ -19,7 +19,7 @@ import pandas as pd
 
 FUNC_MAP = {
     "z_score": z_score,
-    "true_trend": lambda s: s.rolling(10).apply(true_trend, raw=False),
+    "true_trend": lambda s: s.rolling(20).apply(true_trend, raw=False),
     "signal_noise": signal_noise,
     "slope_diff": slope_diff,
     "smooth_series": smooth_series,

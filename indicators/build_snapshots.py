@@ -5,6 +5,7 @@ from indicators.compute_indicators import compute_indicators
 from indicators.compute_passthroughs import compute_passthroughs
 from config.config import INTERVAL_PERIOD_MAP
 
+
 def build_full_snapshot(
     tickers: list[str],
     timeframes: list[str],
@@ -52,6 +53,8 @@ def build_full_snapshot(
                 final_row = full_df.iloc[[-1]].copy()
                 final_row["Ticker"] = ticker
                 final_row["Timeframe"] = label
+
+                
 
                 # Reorder columns to place Ticker and Timeframe first
                 cols = ["Ticker", "Timeframe"] + [col for col in final_row.columns if col not in ("Ticker", "Timeframe")]

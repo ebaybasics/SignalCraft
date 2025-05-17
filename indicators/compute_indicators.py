@@ -4,6 +4,8 @@ import pandas as pd
 import pandas_ta as ta
 import yfinance as yf
 from config.config import INTERVAL_PERIOD_MAP, INDICATOR_REGISTRY
+from indicators.post_indicator_proccessing_functions import series_vwap 
+
 
 
 def compute_indicators(df: pd.DataFrame, interval: str) -> pd.DataFrame:

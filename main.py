@@ -42,8 +42,9 @@ else:
 #
 # As long as your custom fetch function returns a properly formatted OHLCV DataFrame,
 # the rest of the pipeline will work without modification.
-timeframes = ["5m", "1h", "1d", "1wk", "1mo"]
+timeframes = ["1h", "1d", "1wk", "1mo", "5m"]
 snapshots = build_full_snapshot(tickers, timeframes, fetch_ticker_data)
+
 
 # === Compute Indicator Layers Separately ===
 # We explicitly separate the calculation of pure technical indicators (via pandas_ta)
@@ -67,7 +68,9 @@ for label, df in snapshots.items():
 
 # === Enhance each snapshot using configured indicator enhancers ===
 for label, df in snapshots.items():
-    snapshots[label] = apply_derived_features(df, label)
+    df = apply_derived_features(df, label)
+    df = add_sumZZ(df, label)  
+    snapshots[label] = df
 
 
 
@@ -112,3 +115,36 @@ for ticker in SR_tickers:
                 print(f"⚠️ No data for {ticker} {tf}")
         except Exception as e:
             print(f"❌ Error fetching {ticker} {tf}: {e}")
+
+
+# === Save "Good Enough" Columns for LLM per Timeframe ===
+good_enough_cols = [
+    "CMF",            # raw CMF (optional—include if you want the actual value, else drop)
+    "RSI_Z", "CMF_Z", "OBV_Z", "MACDh_12_26_9_Z", "VWAP_Z", "sumZZ"
+]
+
+for label, df in snapshots.items():
+    # Find columns with correct suffix (e.g., "RSI_Z_1H")
+    # Build dynamic column names per label (case-insensitive, strip accidental spaces)
+    keep_cols = ["Ticker", "Timeframe"]
+    for col in good_enough_cols:
+        if col in ["Ticker", "Timeframe", "CMF"]:
+            keep_cols.append(col)
+        else:
+            # Most zscore/derived columns will have _label (e.g., _1H, _1D)
+            col_with_label = f"{col}_{label}"
+            # Defensive: check if it exists (some snapshots might be missing a column)
+            if col_with_label in df.columns:
+                keep_cols.append(col_with_label)
+            else:
+                print(f"⚠️ {col_with_label} missing in {label}")
+
+    # Only keep columns that exist
+    filtered_cols = [c for c in keep_cols if c in df.columns]
+    good_df = df[filtered_cols].copy()
+
+    # Save to file
+    good_file_path = f"data/marketData/goodEnough_{label}.csv"
+    good_df.to_csv(good_file_path, index=False)
+    print(f"✅ Saved {label} good enough CSV to {good_file_path}")
+
