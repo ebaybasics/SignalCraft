@@ -2,7 +2,7 @@
 
 import pandas as pd
 import os
-from config.config import tickers as tickers, SR_tickers
+from config.config import tickers as tickers, SR_tickers, BASE_FEATURES
 from indicators.fetch_data import fetch_ticker_data
 from indicators.post_indicator_proccessing_functions import *
 from analysis.summary import summarize_top_bottom_indicators
@@ -118,10 +118,12 @@ for ticker in SR_tickers:
 
 
 # === Save "Good Enough" Columns for LLM per Timeframe ===
-good_enough_cols = [
-    "CMF",            # raw CMF (optional—include if you want the actual value, else drop)
-    "RSI_Z", "CMF_Z", "OBV_Z", "MACDh_12_26_9_Z", "VWAP_Z", "sumZZ"
-]
+# good_enough_cols = [
+#     "CMF",            # raw CMF (optional—include if you want the actual value, else drop)
+#     "RSI_Z", "CMF_Z", "OBV_Z", "MACDh_12_26_9_Z", "VWAP_Z", "sumZZ"
+# ]
+
+good_enough_cols = BASE_FEATURES
 
 for label, df in snapshots.items():
     # Find columns with correct suffix (e.g., "RSI_Z_1H")

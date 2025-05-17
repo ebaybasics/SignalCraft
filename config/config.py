@@ -55,7 +55,9 @@ tickers = [
 
 # Individual
 # tickers = [
-#     'VOD'
+#     'NVDA',
+#     'AMD',
+#     'AVGO',
 # ]
 
 
@@ -109,7 +111,9 @@ INDICATOR_REGISTRY = {
     "RSI": {"func": "ta.rsi", "columns": ["Close"], "params": {"length": 14}, "with_avg": True, "with_slope": True},
     "MACD": {"func": "ta.macd", "columns": ["Close"], "params": {}},
     "OBV": {"func": "ta.obv", "columns": ["Close", "Volume"], "params": {}, "with_avg": True, "with_slope": True},
-    "VWAP": {"func": "series_vwap","columns": ["High", "Low", "Close", "Volume"],"params": {"window": 20}}
+    "VWAP": {"func": "series_vwap","columns": ["High", "Low", "Close", "Volume"],"params": {"window": 20}},
+    "BB_POS": {"func": "ta.bbands", "columns": ["Close"], "params": {"length": 20, "std": 2, "append": False}}
+
 }
 
 
@@ -125,8 +129,8 @@ INDICATOR_REGISTRY = {
 #
 # Only add functions here that are intended to be post-processing steps applied to the original indicator values.
 INDICATOR_ENHANCERS = {
-    "OBV":   ["z_score"],  # z_score for regime, optional: "velocity_rank" if you want unique flows
-    "CMF":   ["z_score"],  # z_score for outlier accumulation/distribution
+    "OBV":   ["z_score", "true_trend"],  # z_score for regime, optional: "velocity_rank" if you want unique flows
+    "CMF":   ["z_score", "true_trend"],  # z_score for outlier accumulation/distribution
     "RSI":   ["z_score"],  # z_score for unusual momentum regime
     "MACDh_12_26_9":  ["z_score"],  # z_score for unusual MACD movement (optional)
     "VOLUME":   ["z_score"],  # z_score plus a percentile/spike check (see below)
@@ -135,13 +139,15 @@ INDICATOR_ENHANCERS = {
 
 # List of base features to include for LLM csv files, minus suffix (timeframe label)
 BASE_FEATURES = [
+    "RSI",
     "RSI_Z",
-    "MACDh_Z",
+    "BBP_20_2.0",
+    "MACDh_12_26_9_Z",
     "OBV_Z",
+    "CMF",
     "CMF_Z",
     "VWAP_Z",
-    "sumZZ",    # If you create this in your enhancer pipeline
-    # Add/remove as needed
+    "sumZZ",    
 ]
 
 PASSTHROUGH_REGISTRY = {
