@@ -111,18 +111,18 @@ tickers = [
 # ]
 
 # AI Power Themed Utility AI Suggesstions
-tickers = [
-    "NEE",
-    "CEG",
-    "VST",
-    "NRG",
-    "DUK",
-    "SO",
-    "SRE",
-    "AEP",
-    "XEL",
+# tickers = [
+#     "NEE",
+#     "CEG",
+#     "VST",
+#     "NRG",
+#     "DUK",
+#     "SO",
+#     "SRE",
+#     "AEP",
+#     "XEL",
 
-]
+# ]
 
 
 # Individual
