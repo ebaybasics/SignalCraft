@@ -54,6 +54,24 @@ def build_full_snapshot(
                 final_row["Ticker"] = ticker
                 final_row["Timeframe"] = label
 
+                # ----- ADD DATE & TIME COLUMNS ----------------------------------------
+                ts   = raw_df.index[-1]                     # tz-aware UTC timestamp
+                # If you prefer U.S. market time convert here:
+                ts = ts.tz_convert("America/New_York")
+                final_row["Date"] = ts.strftime("%m/%d/%y")
+                final_row["Time"] = ts.strftime("%H:%M")
+                # -----------------------------------------------------------------------
+
+                final_row["Ticker"]    = ticker
+                final_row["Timeframe"] = label
+
+                # Re-order so Date / Time are the first two columns
+                cols = (
+                    ["Date", "Time", "Ticker", "Timeframe"]
+                    + [c for c in final_row.columns if c not in ("Date","Time","Ticker","Timeframe")]
+                )
+                final_row = final_row[cols]
+
                 
 
                 # Reorder columns to place Ticker and Timeframe first
