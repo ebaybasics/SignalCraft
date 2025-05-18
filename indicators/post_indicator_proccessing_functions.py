@@ -13,7 +13,7 @@ def smooth_series(series: pd.Series, n: int = 3) -> pd.Series:
     """Smooth a series with a rolling mean."""
     return series.rolling(n).mean()
 
-def true_trend(series: pd.Series, window: int = 10) -> float:
+def true_trend(series: pd.Series, window: int = 20) -> float:
     """Calculate the slope of the linear regression line."""
     if len(series.dropna()) < window:
         return np.nan

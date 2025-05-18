@@ -5,10 +5,67 @@
 
 # === ETF Ticker List ===
 tickers = [
-    "SPY", "QQQ", "DIA", "IWM", "VTI", "VOO", "IVV",
-    "XLK", "XLF", "XLY", "XLP", "XLV", "XLE", "XLI", "XLRE", "XLU", "XLB", "XLC",
-    "ARKK", "SMH", "TAN", "PBW", "FXI", "EEM", "EFA", "TLT", "HYG", "UUP", "SLV",
-    "SIL", "GDX", "GLD", "VXX"
+    # ─── U.S. Broad Equity Benchmarks ───
+    "SPY",  # S&P 500
+    "QQQ",  # Nasdaq-100
+    "DIA",  # Dow 30
+    "IWM",  # Russell 2000
+    "VTI", "VOO", "IVV",  # Total-market & alt S&P 500 wrappers
+
+    # ─── U.S. Style & Factor Tilts ───
+    "VUG",  # Growth
+    "VTV",  # Value
+    "MTUM", # Momentum
+    "QUAL", # Quality
+    "USMV", # Min-Vol
+
+    # ─── U.S. Sector SPDRs (unchanged) ───
+    "XLK","XLF","XLY","XLP","XLV","XLE","XLI","XLRE","XLU","XLB","XLC",
+
+    # ─── Thematic / Innovation ───
+    "ARKK", "SMH", "TAN", "PBW",
+
+    # ─── Global & Regional Equity ───
+    "EEM",  # EM broad
+    "EFA",  # Developed ex-US
+    "IEFA", # Cheaper developed ex-US core
+    "FXI",  # China large-cap
+    "INDA", # India
+    "EWZ",  # Brazil
+    "VEA",  # Developed Pacific & Europe
+
+    # ─── Fixed-Income & Rates ───
+    "TLT",  # 20-yr Treasury
+    "IEF",  # 7-10 yr Treasury
+    "SHY",  # 1-3 yr Treasury (front-end stress)
+    "TIP",  # US TIPS (inflation breakevens)
+    "BNDX", # Global AGG ex-US (hedged)
+    "EMB",  # EM USD sovereigns
+    "LQD",  # Invest-grade corporate
+    "HYG",  # High-yield corporate
+
+    # ─── Commodities ───
+    "USO",  # WTI crude
+    "BNO",  # Brent crude
+    "UNG",  # Nat-gas
+    "GLD", "GDX", "SLV", "SIL",  # Precious metals + miners
+    "CPER", # Copper (Dr Copper = growth pulse)
+    "DBA",  # Agriculture basket
+    "DBC",  # Broad commodity basket
+
+    # ─── Currencies / Dollar Smile ───
+    "UUP",  # Long USD
+    "FXE",  # Euro
+    "FXY",  # Japanese Yen
+    "CYB",  # Chinese Yuan (on-shore proxy)
+
+    # ─── Real Assets & Alt-Inflation Hedges ───
+    "VNQ",  # US REITs
+    "REET", # Global REITs
+    "INFL", # Real-asset / commodity equities sleeve
+
+    # ─── Volatility & Tail Risk ───
+    "VXX"   # Short-term VIX futures ETN
 ]
 
 #=== Individual Ticker List ===
@@ -52,6 +109,21 @@ tickers = [
 #     'SMCI',
 #     'LITE'
 # ]
+
+# AI Power Themed Utility AI Suggesstions
+tickers = [
+    "NEE",
+    "CEG",
+    "VST",
+    "NRG",
+    "DUK",
+    "SO",
+    "SRE",
+    "AEP",
+    "XEL",
+
+]
+
 
 # Individual
 # tickers = [
@@ -107,14 +179,28 @@ INTERVAL_PERIOD_MAP = {
 #
 # If you're adding a new ta indicator, define it here first before building any enhancements.
 INDICATOR_REGISTRY = {
-    "CMF": {"func": "ta.cmf", "columns": ["High", "Low", "Close", "Volume"], "params": {"length": 20}, "with_avg": True, "with_slope": True},
-    "RSI": {"func": "ta.rsi", "columns": ["Close"], "params": {"length": 14}, "with_avg": True, "with_slope": True},
-    "MACD": {"func": "ta.macd", "columns": ["Close"], "params": {}},
-    "OBV": {"func": "ta.obv", "columns": ["Close", "Volume"], "params": {}, "with_avg": True, "with_slope": True},
-    "VWAP": {"func": "series_vwap","columns": ["High", "Low", "Close", "Volume"],"params": {"window": 20}},
-    "BB_POS": {"func": "ta.bbands", "columns": ["Close"], "params": {"length": 20, "std": 2, "append": False}}
+    # ─── Money-flow / Volume ───
+    "CMF":  {"func": "ta.cmf",  "columns": ["High", "Low", "Close", "Volume"],
+             "params": {"length": 20}, "with_avg": True, "with_slope": True},
+    "OBV":  {"func": "ta.obv",  "columns": ["Close", "Volume"], "params": {},
+             "with_avg": True, "with_slope": True},
 
+    # ─── Momentum & Oscillators ───
+    "RSI":  {"func": "ta.rsi",  "columns": ["Close"], "params": {"length": 14},
+             "with_avg": True, "with_slope": True},
+    "MACD": {"func": "ta.macd", "columns": ["Close"], "params": {}},
+
+    # ─── Volatility / Range ───
+    "ATR":  {"func": "ta.atr",  "columns": ["High", "Low", "Close"],
+             "params": {"length": 14}, "with_avg": True, "with_slope": True},
+
+    # ─── Price-positioning ───
+    "VWAP": {"func": "series_vwap", "columns": ["High", "Low", "Close", "Volume"],
+             "params": {"window": 20}},
+    "BB_POS": {"func": "ta.bbands", "columns": ["Close"],
+               "params": {"length": 20, "std": 2, "append": False}}
 }
+
 
 
 # === INDICATOR_ENHANCERS ===
@@ -135,6 +221,7 @@ INDICATOR_ENHANCERS = {
     "MACDh_12_26_9":  ["z_score"],  # z_score for unusual MACD movement (optional)
     "VOLUME":   ["z_score"],  # z_score plus a percentile/spike check (see below)
     "VWAP":  ["z_score"],  # z_score for price stretch
+    "ATR": ["z_score"]
 }
 
 # List of base features to include for LLM csv files, minus suffix (timeframe label)
@@ -147,7 +234,9 @@ BASE_FEATURES = [
     "CMF",
     "CMF_Z",
     "VWAP_Z",
-    "sumZZ",    
+    "sumZZ",
+    "slope_sumZZ",
+    "ATR_Z"    
 ]
 
 PASSTHROUGH_REGISTRY = {

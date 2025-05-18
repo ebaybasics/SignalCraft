@@ -66,10 +66,33 @@ for label, df in snapshots.items():
         print(f"❌ Error applying passthroughs to snapshot {label}: {e}")
 
 
-# === Enhance each snapshot using configured indicator enhancers ===
+# --- map a sensible slope-look-back to each timeframe label ---------------
+## --------------- This is hacked together so we can run our add_sumZZ function and Trend function from 
+### --------------- post_inidcator functions. LOGIC NEEDS TO BE FIXED TO BE MODULAR AND FOLLOW DRY
+TREND_WINDOWS = {
+    "1H": 24,   # one trading session of hourly bars
+    "1D": 14,   # ~ three weeks of daily bars
+    "1WK": 12,  # ~ three months of weekly bars
+    "1MO": 6,   # ~ half-year of monthly bars
+}
+
 for label, df in snapshots.items():
+    # 1) your usual feature stack
     df = apply_derived_features(df, label)
-    df = add_sumZZ(df, label)  
+    df = add_sumZZ(df, label)          # → adds  'sumZZ_<label>'
+
+    # 2) run the new slope on that freshly-added column
+    sum_col   = f"sumZZ_{label}"       # source column
+    slope_col = f"slope_sumZZ_{label}" # destination column
+    win       = TREND_WINDOWS.get(label, 20)
+
+    # rolling.apply passes a *window-sized Series* into the lambda
+    df[slope_col] = (
+        df[sum_col]
+        .rolling(win)
+        .apply(lambda s: true_trend(s, window=win), raw=False)
+    )
+
     snapshots[label] = df
 
 
