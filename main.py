@@ -146,30 +146,28 @@ for ticker in SR_tickers:
 #     "RSI_Z", "CMF_Z", "OBV_Z", "MACDh_12_26_9_Z", "VWAP_Z", "sumZZ"
 # ]
 
-good_enough_cols = BASE_FEATURES
+# === export_good_enough.py ==============================================
+good_enough_cols = BASE_FEATURES + ["Date", "Time"]      # ← add once here
 
 for label, df in snapshots.items():
-    # Find columns with correct suffix (e.g., "RSI_Z_1H")
-    # Build dynamic column names per label (case-insensitive, strip accidental spaces)
-    keep_cols = ["Ticker", "Timeframe"]
+    keep_cols = ["Date", "Time", "Ticker", "Timeframe"]  # ← and here
     for col in good_enough_cols:
-        if col in ["Ticker", "Timeframe", "CMF"]:
-            keep_cols.append(col)
+        if col in ["Ticker", "Timeframe", "CMF", "Date", "Time"]:
+            # already added or non-suffix columns we always keep
+            continue
         else:
-            # Most zscore/derived columns will have _label (e.g., _1H, _1D)
             col_with_label = f"{col}_{label}"
-            # Defensive: check if it exists (some snapshots might be missing a column)
             if col_with_label in df.columns:
                 keep_cols.append(col_with_label)
             else:
                 print(f"⚠️ {col_with_label} missing in {label}")
 
-    # Only keep columns that exist
+    # keep only existing cols (defensive) -------------------------------
     filtered_cols = [c for c in keep_cols if c in df.columns]
     good_df = df[filtered_cols].copy()
 
-    # Save to file
-    good_file_path = f"data/marketData/goodEnough_{label}.csv"
-    good_df.to_csv(good_file_path, index=False)
-    print(f"✅ Saved {label} good enough CSV to {good_file_path}")
+    # Save out -----------------------------------------------------------
+    out_path = f"data/marketData/goodEnough_{label}.csv"
+    good_df.to_csv(out_path, index=False)
+    print(f"✅ Saved {label} good-enough CSV → {out_path}")
 
