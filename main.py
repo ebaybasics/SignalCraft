@@ -1,173 +1,286 @@
-# === main.py ===
+#!/usr/bin/env python3
+"""
+SignalCraft - Market Analysis and Indicator Processing Pipeline
+"""
 
 import pandas as pd
 import os
-from config.config import tickers as tickers, SR_tickers, BASE_FEATURES
+import argparse
+import logging
+from pathlib import Path
+from typing import Dict, List, Any, Optional
+
+# Import configuration
+from config.config import tickers as default_tickers, SR_tickers, BASE_FEATURES
 from indicators.fetch_data import fetch_ticker_data
-from indicators.post_indicator_proccessing_functions import *
+from indicators.post_indicator_proccessing_functions import add_sumZZ, true_trend
 from analysis.summary import summarize_top_bottom_indicators
 from indicators.enhance_indicators import apply_derived_features
 from indicators.compute_passthroughs import compute_passthroughs
 from indicators.build_snapshots import build_full_snapshot
+from stockrover.extract_tickers import extract_tickers_from_pdf
 
-from stockrover.extract_tickers import extract_tickers_from_pdf as extract_tickers  # Function to extract from PDF
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
+# ==== CONSTANTS ====
+TIMEFRAMES = ["5m", "1h", "1d", "1wk", "1mo"]
+TIMEFRAMES_UPPER = [tf.upper() for tf in TIMEFRAMES]
+DATA_DIR = Path("data")
+MARKET_DATA_DIR = DATA_DIR / "marketData"
+PRICE_VOLUME_DIR = DATA_DIR / "priceVolume"
+STOCKROVER_PDF_DIR = Path("stockrover/stockrover_downloads")
+STOCKROVER_PDF = STOCKROVER_PDF_DIR / "Stock Rover Table.pdf"
 
-
-# === Create Output Directory ===
-os.makedirs("data", exist_ok=True)
-
-# === Check for Stock Rover PDF Override ***MAKE SURE TO DELETE FILE WHEN DONE***===
-stockrover_pdf_dir = "stockrover/stockrover_downloads"
-pdf_override_file = os.path.join(stockrover_pdf_dir, "Stock Rover Table.pdf")
-
-if os.path.exists(pdf_override_file):
-    print(f"[INFO] Using tickers extracted from: {pdf_override_file}")
-    tickers = extract_tickers(pdf_override_file)
-else:
-    print("[INFO] No Stock Rover override found. Using default tickers from config.")
-    #tickers = default_tickers
-
-# === Flexible Snapshot Builder ===
-# The following line generates snapshots for each timeframe by computing both technical indicators
-# and passthrough values (e.g., VOLUME, REL_VOLUME) using raw OHLCV data.
-#
-# ✅ To change your data source in the future:
-# Simply swap out `fetch_ticker_data` with another compatible data-fetching function,
-# such as `fetch_from_csv`, `fetch_from_api`, or a custom database query.
-#
-# 🧠 Reminder:
-# `fetch_ticker_data` is defined in `indicators/fetch_data.py` and follows this format:
-#     def fetch_ticker_data(ticker: str, interval: str, years: int) -> pd.DataFrame
-#
-# As long as your custom fetch function returns a properly formatted OHLCV DataFrame,
-# the rest of the pipeline will work without modification.
-timeframes = ["1h", "1d", "1wk", "1mo", "5m"]
-snapshots = build_full_snapshot(tickers, timeframes, fetch_ticker_data)
-
-
-# === Compute Indicator Layers Separately ===
-# We explicitly separate the calculation of pure technical indicators (via pandas_ta)
-# from passthrough data transformations like raw Volume and derived REL_VOLUME.
-#
-# This preserves modularity and gives us flexibility to:
-# - Swap out or extend passthrough logic independently
-# - Reuse compute_indicators() in contexts where passthroughs aren’t needed
-# - Add custom passthroughs (e.g., VWAP, average true range volume) later
-#
-# `compute_passthroughs()` pulls from PASSTHROUGH_REGISTRY in config.py
-# and generates raw and derived signals like VOLUME_1H, VOLUME_1H_Avg, REL_VOLUME_1H, etc.
-# === Add passthrough columns (like VOLUME, REL_VOLUME) to each snapshot ===
-for label, df in snapshots.items():
-    try:
-        passthrough_df = compute_passthroughs(df, label)
-        snapshots[label] = pd.concat([df, passthrough_df], axis=1)
-    except Exception as e:
-        print(f"❌ Error applying passthroughs to snapshot {label}: {e}")
-
-
-# --- map a sensible slope-look-back to each timeframe label ---------------
-## --------------- This is hacked together so we can run our add_sumZZ function and Trend function from 
-### --------------- post_inidcator functions. LOGIC NEEDS TO BE FIXED TO BE MODULAR AND FOLLOW DRY
+# Mapping for trend windows
 TREND_WINDOWS = {
     "1H": 24,   # one trading session of hourly bars
     "1D": 14,   # ~ three weeks of daily bars
     "1WK": 12,  # ~ three months of weekly bars
     "1MO": 6,   # ~ half-year of monthly bars
+    "5M": 48,   # ~ one trading day of 5-minute bars
 }
 
-for label, df in snapshots.items():
-    # 1) your usual feature stack
-    df = apply_derived_features(df, label)
-    df = add_sumZZ(df, label)          # → adds  'sumZZ_<label>'
-
-    # 2) run the new slope on that freshly-added column
-    sum_col   = f"sumZZ_{label}"       # source column
-    slope_col = f"slope_sumZZ_{label}" # destination column
-    win       = TREND_WINDOWS.get(label, 20)
-
-    # rolling.apply passes a *window-sized Series* into the lambda
-    df[slope_col] = (
-        df[sum_col]
-        .rolling(win)
-        .apply(lambda s: true_trend(s, window=win), raw=False)
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description='SignalCraft Market Analysis Pipeline')
+    
+    parser.add_argument(
+        '--tickers', '-t',
+        type=str,
+        nargs='+',
+        help='Override tickers list (e.g., -t AAPL MSFT GOOG)'
     )
+    
+    parser.add_argument(
+        '--timeframes', '-tf',
+        type=str,
+        nargs='+',
+        default=TIMEFRAMES,
+        help=f'Timeframes to analyze (default: {" ".join(TIMEFRAMES)})'
+    )
+    
+    parser.add_argument(
+        '--output-dir', '-o',
+        type=str,
+        default=str(DATA_DIR),
+        help=f'Output directory for data files (default: {DATA_DIR})'
+    )
+    
+    parser.add_argument(
+        '--verbose', '-v',
+        action='store_true',
+        help='Enable verbose logging'
+    )
+    
+    return parser.parse_args()
 
-    snapshots[label] = df
+def setup_directories(data_dir: Path = DATA_DIR) -> None:
+    """Create necessary directories if they don't exist"""
+    market_dir = data_dir / "marketData"
+    price_dir = data_dir / "priceVolume"
+    
+    for directory in [data_dir, market_dir, price_dir]:
+        directory.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Ensured directory exists: {directory}")
 
+def get_tickers(cli_tickers: Optional[List[str]] = None) -> List[str]:
+    """
+    Get tickers based on priority:
+    1. Command-line arguments (if provided)
+    2. StockRover PDF (if exists)
+    3. Default tickers from config
+    """
+    if cli_tickers:
+        logger.info(f"Using {len(cli_tickers)} tickers from command line: {', '.join(cli_tickers[:5])}...")
+        return cli_tickers
+    elif STOCKROVER_PDF.exists():
+        logger.info(f"Using tickers extracted from: {STOCKROVER_PDF}")
+        return extract_tickers_from_pdf(STOCKROVER_PDF)
+    else:
+        logger.info(f"Using {len(default_tickers)} default tickers from config")
+        return default_tickers
 
+def enhance_snapshot(df: pd.DataFrame, label: str) -> pd.DataFrame:
+    """Apply post-processing to a snapshot dataframe"""
+    try:
+        # Apply derived features
+        df = apply_derived_features(df, label)
+        
+        # Add sumZZ
+        df = add_sumZZ(df, label)
+        
+        # Calculate trend slope
+        sum_col = f"sumZZ_{label}"
+        slope_col = f"slope_sumZZ_{label}"
+        win = TREND_WINDOWS.get(label, 20)
+        
+        df[slope_col] = (
+            df[sum_col]
+            .rolling(win)
+            .apply(lambda s: true_trend(s, window=win), raw=False)
+        )
+        
+        return df
+    except Exception as e:
+        logger.error(f"Error enhancing snapshot {label}: {str(e)}")
+        return df
 
-# === Summary Output ===
-print("🧠 Summarizing top and bottom ETFs by active indicators...")
-summary_df = summarize_top_bottom_indicators(snapshots)
-
-# === Save Outputs ===
-
-# Create data folder if it doesn't exist
-os.makedirs("data/marketData", exist_ok=True)
-
-# Save each snapshot to a separate file in /data/marketData/
-for label, df in snapshots.items():
-    file_path = f"data/marketData/marketData_{label}.csv"
-    df.to_csv(file_path, index=False)
-    print(f"✅ Saved {label} snapshot to {file_path}")
-
-# Save ranked summary
-summary_df.to_csv("data/indicatorSummary.csv", index=False)
-
-print("✅ Saved full market data to data/marketData.csv")
-print("✅ Saved summary rankings to data/indicatorSummary.csv")
-
-from indicators.fetch_data import generate_ohlcv_snapshots
-import os
-
-# === Save Ticker OHLCV Snapshots ===
-os.makedirs("data/priceVolume", exist_ok=True)
-
-timeframes = ["5m", "1h", "1d", "1wk", "1mo"]
-
-for ticker in SR_tickers:
-    for tf in timeframes:
+def add_passthroughs(snapshots: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
+    """Add passthrough columns to each snapshot"""
+    enhanced_snapshots = {}
+    
+    for label, df in snapshots.items():
         try:
-            df = fetch_ticker_data(ticker, interval=tf, years=1)
-            if not df.empty:
-                filepath = f"data/priceVolume/{ticker}_{tf.upper()}.csv"
-                df.to_csv(filepath)
-                print(f"✅ Saved: {filepath}")
-            else:
-                print(f"⚠️ No data for {ticker} {tf}")
+            passthrough_df = compute_passthroughs(df, label)
+            enhanced_snapshots[label] = pd.concat([df, passthrough_df], axis=1)
+            logger.info(f"Added passthroughs to {label} snapshot")
         except Exception as e:
-            print(f"❌ Error fetching {ticker} {tf}: {e}")
+            logger.error(f"Error applying passthroughs to {label}: {str(e)}")
+            enhanced_snapshots[label] = df
+            
+    return enhanced_snapshots
 
+def save_snapshots(snapshots: Dict[str, pd.DataFrame], output_dir: Path = MARKET_DATA_DIR) -> None:
+    """Save all snapshot dataframes to CSV files"""
+    for label, df in snapshots.items():
+        file_path = output_dir / f"marketData_{label}.csv"
+        df.to_csv(file_path, index=False)
+        logger.info(f"Saved {label} snapshot to {file_path}")
 
-# === Save "Good Enough" Columns for LLM per Timeframe ===
-# good_enough_cols = [
-#     "CMF",            # raw CMF (optional—include if you want the actual value, else drop)
-#     "RSI_Z", "CMF_Z", "OBV_Z", "MACDh_12_26_9_Z", "VWAP_Z", "sumZZ"
-# ]
+def save_ticker_ohlcv(ticker_list: List[str], timeframes: List[str], output_dir: Path = PRICE_VOLUME_DIR) -> None:
+    """Save OHLCV data for each ticker and timeframe"""
+    for ticker in ticker_list:
+        for tf in timeframes:
+            try:
+                df = fetch_ticker_data(ticker, interval=tf, years=1)
+                if not df.empty:
+                    filepath = output_dir / f"{ticker}_{tf.upper()}.csv"
+                    df.to_csv(filepath)
+                    logger.info(f"Saved: {filepath}")
+                else:
+                    logger.warning(f"No data for {ticker} {tf}")
+            except Exception as e:
+                logger.error(f"Error fetching {ticker} {tf}: {str(e)}")
 
-# === export_good_enough.py ==============================================
-good_enough_cols = BASE_FEATURES + ["Date", "Time"]      # ← add once here
-
-for label, df in snapshots.items():
-    keep_cols = ["Date", "Time", "Ticker", "Timeframe"]  # ← and here
-    for col in good_enough_cols:
-        if col in ["Ticker", "Timeframe", "CMF", "Date", "Time"]:
-            # already added or non-suffix columns we always keep
-            continue
-        else:
-            col_with_label = f"{col}_{label}"
-            if col_with_label in df.columns:
-                keep_cols.append(col_with_label)
+def save_good_enough_columns(snapshots: Dict[str, pd.DataFrame], output_dir: Path = MARKET_DATA_DIR) -> None:
+    """Save 'good enough' columns for LLM consumption"""
+    good_enough_cols = BASE_FEATURES + ["Date", "Time"]
+    
+    for label, df in snapshots.items():
+        keep_cols = ["Date", "Time", "Ticker", "Timeframe"]
+        
+        # Add columns with label suffix
+        for col in good_enough_cols:
+            if col in ["Ticker", "Timeframe", "CMF", "Date", "Time"]:
+                # already added or non-suffix columns we always keep
+                continue
             else:
-                print(f"⚠️ {col_with_label} missing in {label}")
+                col_with_label = f"{col}_{label}"
+                if col_with_label in df.columns:
+                    keep_cols.append(col_with_label)
+                else:
+                    logger.warning(f"{col_with_label} missing in {label}")
 
-    # keep only existing cols (defensive) -------------------------------
-    filtered_cols = [c for c in keep_cols if c in df.columns]
-    good_df = df[filtered_cols].copy()
+        # Filter to existing columns only
+        filtered_cols = [c for c in keep_cols if c in df.columns]
+        good_df = df[filtered_cols].copy()
 
-    # Save out -----------------------------------------------------------
-    out_path = f"data/marketData/goodEnough_{label}.csv"
-    good_df.to_csv(out_path, index=False)
-    print(f"✅ Saved {label} good-enough CSV → {out_path}")
+        # Save output
+        out_path = output_dir / f"goodEnough_{label}.csv"
+        good_df.to_csv(out_path, index=False)
+        logger.info(f"Saved {label} good-enough CSV → {out_path}")
+
+def main() -> None:
+    """Main execution pipeline"""
+    # Parse command line arguments
+    args = parse_arguments()
+    
+    # Set logging level based on verbosity
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    
+    # Setup directories
+    data_dir = Path(args.output_dir)
+    market_dir = data_dir / "marketData"
+    price_dir = data_dir / "priceVolume"
+    setup_directories(data_dir)
+    
+    # Get tickers (with priority: CLI args > PDF > config defaults)
+    analysis_tickers = get_tickers(args.tickers)
+    
+    # Convert timeframes to lowercase for consistency
+    timeframes = [tf.lower() for tf in args.timeframes]
+    
+    # Build initial snapshots
+    logger.info(f"Building market snapshots for {len(analysis_tickers)} tickers across {len(timeframes)} timeframes...")
+    snapshots = build_full_snapshot(analysis_tickers, timeframes, fetch_ticker_data)
+    
+    # Add passthrough columns
+    logger.info("Adding passthroughs...")
+    snapshots = add_passthroughs(snapshots)
+    
+    # Enhance snapshots with derived features
+    logger.info("Enhancing snapshots with derived features...")
+    for label, df in snapshots.items():
+        snapshots[label] = enhance_snapshot(df, label)
+    
+    # Generate summary
+    logger.info("Summarizing top and bottom ETFs by active indicators...")
+    summary_df = summarize_top_bottom_indicators(snapshots)
+    summary_df.to_csv(data_dir / "indicatorSummary.csv", index=False)
+    logger.info("Saved summary rankings to data/indicatorSummary.csv")
+    
+    # Save snapshots
+    logger.info("Saving snapshot files...")
+    save_snapshots(snapshots, market_dir)
+    
+    # Save ticker OHLCV data
+    logger.info("Saving individual ticker OHLCV data...")
+    save_ticker_ohlcv(SR_tickers, timeframes, price_dir)
+    
+    # Save good enough columns for LLM
+    logger.info("Saving LLM-friendly dataframes...")
+    save_good_enough_columns(snapshots, market_dir)
+    
+    logger.info("✅ SignalCraft processing pipeline complete!")
+
+if __name__ == "__main__":
+    main()
+
+# =====================================================
+# USAGE EXAMPLES:
+# =====================================================
+#
+# 1. Basic usage with default settings:
+#    python main.py
+#
+# 2. Override tickers with a custom list:
+#    python main.py -t SPY QQQ IWM AAPL MSFT
+#
+# 3. Analyze only specific timeframes:
+#    python main.py -tf 1d 1wk
+#    
+# 4. Use small set of tickers with specific timeframes:
+#    python main.py -t SPY QQQ IWM -tf 1d 1wk
+#
+# 5. Output to a custom directory:
+#    python main.py -o /path/to/custom/data/dir
+#
+# 6. Enable verbose logging:
+#    python main.py -v
+#
+# 7. Combine multiple options:
+#    python main.py -t AAPL MSFT GOOG -tf 1d 1wk 1mo -o ./custom_data -v
+#
+# 8. Quick analysis of major ETFs (daily only):
+#    python main.py -t SPY QQQ IWM XLF XLE XLK XLV -tf 1d
+#
+# 9. Focus on tech sector with fine-grained timeframes:
+#    python main.py -t AAPL MSFT GOOG AMZN META NVDA AMD -tf 5m 1h 1d
+# =====================================================
 

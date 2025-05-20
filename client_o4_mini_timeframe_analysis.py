@@ -1,5 +1,5 @@
 import openai
-from config.credentials import OPENAI_API_KEY 
+from config.credentials import OPENAI_API_KEY
 from openai import OpenAI
 
 
