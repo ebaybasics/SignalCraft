@@ -10,7 +10,7 @@ tickers = [
     "QQQ",  # Nasdaq-100
     "DIA",  # Dow 30
     "IWM",  # Russell 2000
-    "VTI", "VOO", "IVV",  # Total-market & alt S&P 500 wrappers
+    "VTI", "VOO",  # Total-market & alt S&P 500 wrappers
 
     # ─── U.S. Style & Factor Tilts ───
     "VUG",  # Growth
@@ -132,6 +132,14 @@ tickers = [
 #     'AVGO',
 # ]
 
+# Top 5 XLV Holdings as of 5/20
+# tickers = [
+#     "LLY",
+#     "JNJ",
+#     "ABBV",
+#     "UNH",
+#     "ABT"
+# ]
 
 # === Tickers for Support Resistance Price Volume Data ===
 SR_tickers = []

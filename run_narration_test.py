@@ -18,7 +18,7 @@ def load_market_data():
         "5M": df_5m,
         "1H": df_1h,
         "1D": df_1d,
-        "1WK": df_1wk,
+        # "1WK": df_1wk,
         # "1MO": df_1mo
     }
 
@@ -34,7 +34,7 @@ def format_snapshot(df: pd.DataFrame, timeframe: str) -> str:
 def build_input_message(data: dict) -> str:
     # ordered_keys = ["Indicator Summary", "5M", "1H", "1D", "1WK", "1MO"]
     # ordered_keys = ["Indicator Summary", "5M"]
-    ordered_keys = ["Indicator Summary", "5M", "1H", "1D", "1WK"]
+    ordered_keys = ["Indicator Summary", "5M", "1H", "1D"]
     return "\n".join([format_snapshot(data[tf], tf) for tf in ordered_keys if tf in data])
 
 

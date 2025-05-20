@@ -22,6 +22,8 @@ def true_trend(series: pd.Series, window: int = 20) -> float:
     slope, _, _, _, _ = linregress(x, y)
     return slope
 
+
+
 def velocity_rank(series: pd.Series) -> pd.Series:
     """Measure percentage change as velocity ranking."""
     return series.pct_change()
