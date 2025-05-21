@@ -326,8 +326,17 @@ class SignalCraftGUI:
         thread.start()
         
     def _run_data_collection(self):
-        """Run data collection using main.py"""
-        timeframes = self._get_selected_timeframes()
+        """Run data collection using main.py for ALL timeframes but track selected ones"""
+        # Store which timeframes were actually selected by user (for analysis later)
+        selected_timeframes = self._get_selected_timeframes()
+        self.last_selected_timeframes = selected_timeframes
+        
+        # Get ALL timeframes for data collection regardless of selection
+        all_timeframes = ["5m", "1h", "1d", "1wk", "1mo"]
+        
+        # Log what's happening
+        self._log(f"Selected timeframes for analysis: {', '.join(selected_timeframes)}")
+        self._log(f"Processing ALL timeframes for data collection: {', '.join(all_timeframes)}")
         
         # Get tickers based on checkbox selection
         use_defaults = self.use_default_tickers_var.get()
@@ -340,16 +349,12 @@ class SignalCraftGUI:
             if not tickers:
                 messagebox.showwarning("Warning", "Please enter at least one ticker")
                 return
-    
-        if not timeframes:
-            messagebox.showwarning("Warning", "Please select at least one timeframe")
-            return
-            
-        # Build command
+
+        # Build command - always use ALL timeframes
         cmd = [
             sys.executable, 
             "main.py",
-            "-tf", *timeframes
+            "-tf", *all_timeframes
         ]
         
         # Only add tickers if custom ones are specified
@@ -385,9 +390,38 @@ class SignalCraftGUI:
     
     def _run_all(self):
         """Run data collection followed by analysis"""
+        # Track the timeframes selected at data collection time
+        selected_timeframes = self._get_selected_timeframes()
+        self.last_selected_timeframes = selected_timeframes
+        
+        # Run data collection (will process ALL timeframes)
         self._run_data_collection()
-        # Wait a bit before running analysis to ensure data collection has started
-        self.root.after(2000, self._run_analysis)
+        
+        # Wait a bit, then run analysis with ONLY the timeframes that were selected
+        def delayed_analysis():
+            # Override current selections with what was selected when collection started
+            timeframes_for_analysis = self.last_selected_timeframes if hasattr(self, 'last_selected_timeframes') else self._get_selected_timeframes()
+            
+            # Build command for analysis with only selected timeframes
+            model = self.model_var.get()
+            prompt_type = self.prompt_var.get()
+            temperature = self.temp_var.get()
+            uppercase_timeframes = [tf.upper() for tf in timeframes_for_analysis]
+            
+            cmd = [
+                sys.executable,
+                "run_narration_test.py",
+                "-m", model,
+                "-p", prompt_type,
+                "--temp", str(temperature),
+                "-t", *uppercase_timeframes
+            ]
+            
+            # Run command
+            self._run_command(cmd, "AI Analysis")
+        
+        # Schedule analysis to run after data collection has had time to start
+        self.root.after(2000, delayed_analysis)
     
     def _toggle_ticker_entry(self):
         """Enable or disable ticker entry based on checkbox state"""

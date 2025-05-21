@@ -19,6 +19,7 @@ from indicators.enhance_indicators import apply_derived_features
 from indicators.compute_passthroughs import compute_passthroughs
 from indicators.build_snapshots import build_full_snapshot
 from stockrover.extract_tickers import extract_tickers_from_pdf
+from data_processing.archive_utils import archive_good_enough_files
 
 # Configure logging
 logging.basicConfig(
@@ -246,6 +247,11 @@ def main() -> None:
     # Save good enough columns for LLM
     logger.info("Saving LLM-friendly dataframes...")
     save_good_enough_columns(snapshots, market_dir)
+    
+    # Archive goodEnough files for ML training
+    logger.info("Archiving goodEnough files for ML training...")
+    archive_count = archive_good_enough_files(market_dir)
+    logger.info(f"Archived {archive_count} goodEnough files to historical storage")
     
     logger.info("✅ SignalCraft processing pipeline complete!")
 
