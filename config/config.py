@@ -223,13 +223,14 @@ INDICATOR_REGISTRY = {
 #
 # Only add functions here that are intended to be post-processing steps applied to the original indicator values.
 INDICATOR_ENHANCERS = {
-    "OBV":   ["z_score", "true_trend"],  # z_score for regime, optional: "velocity_rank" if you want unique flows
-    "CMF":   ["z_score", "true_trend"],  # z_score for outlier accumulation/distribution
-    "RSI":   ["z_score"],  # z_score for unusual momentum regime
-    "MACDh_12_26_9":  ["z_score"],  # z_score for unusual MACD movement (optional)
-    "VOLUME":   ["z_score"],  # z_score plus a percentile/spike check (see below)
-    "VWAP":  ["z_score"],  # z_score for price stretch
-    "ATR": ["z_score"]
+    "OBV":   ["z_score", "true_trend"],
+    "CMF":   ["z_score", "true_trend"],
+    "RSI":   ["z_score"],
+    "MACDh_12_26_9":  ["z_score"],
+    "VOLUME":   ["z_score"],
+    "VWAP":  ["z_score"],
+    "ATR": ["z_score"],
+    "PCT_GAIN": ["z_score"]    # Add this if you want normalized percentage gains
 }
 
 # List of base features to include for LLM csv files, minus suffix (timeframe label)
@@ -244,7 +245,10 @@ BASE_FEATURES = [
     "VWAP_Z",
     "sumZZ",
     "slope_sumZZ",
-    "ATR_Z"    
+    "ATR_Z",
+    "PCT_GAIN",        # Add basic percentage gain
+    "PCT_GAIN_Avg",    # Add moving average of percentage gain
+    "PCT_GAIN_Z"       # Add normalized percentage gain
 ]
 
 PASSTHROUGH_REGISTRY = {
@@ -256,6 +260,12 @@ PASSTHROUGH_REGISTRY = {
     "REL_VOLUME": {
         "source": "Volume",  # still required for fallback
         "with_avg": False,
+        "with_slope": False
+    },
+    # Add the new PCT_GAIN feature
+    "PCT_GAIN": {
+        "source": "close",  # Will need special handling for open price
+        "with_avg": True,  # Include 5-day average of gains
         "with_slope": False
     }
 }

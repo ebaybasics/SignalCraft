@@ -401,6 +401,28 @@ class SignalCraftGUI:
             # Reset to default examples if field was empty
             if not self.ticker_var.get() or "Using" in self.ticker_var.get():
                 self.ticker_var.set("SPY QQQ IWM")
+    
+    def _include_full_data(self, file_path, max_rows=100):
+        """Read and format data from CSV file for inclusion in the prompt"""
+        try:
+            import pandas as pd
+            df = pd.read_csv(file_path)
+            
+            # Truncate if file is too large to fit in context window
+            if len(df) > max_rows:
+                self._log(f"File has {len(df)} rows, truncating to {max_rows}")
+                df = df.head(max_rows)
+            
+            # Format data nicely as a table
+            formatted_data = f"Raw data from {file_path.name}:\n```\n"
+            formatted_data += df.to_string(index=False)
+            formatted_data += "\n```"
+            
+            return formatted_data
+        except Exception as e:
+            error_msg = f"Error reading {file_path}: {str(e)}"
+            self._log(error_msg)
+            return error_msg
 
 def main():
     """Main entry point for the GUI application"""
